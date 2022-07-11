@@ -17,7 +17,7 @@ RUN curl -sSLo ./yugabyte.tar.gz https://downloads.yugabyte.com/releases/${YB_VE
   && tar -xvf yugabyte.tar.gz -C $YB_PATH --strip-components=1 \
   && chmod +x $YB_PATH/bin/* \
   && rm ./yugabyte.tar.gz
-RUN ["/usr/local/yugabyte/bin/post_install.sh"]
+# RUN ["/usr/local/yugabyte/bin/post_install.sh"]
 RUN echo "\n# yugabytedb executable path" >> ~/.bashrc
 RUN echo "export PATH=\$PATH:$YB_PATH/bin/" >> ~/.bashrc
 RUN sudo install-packages \
