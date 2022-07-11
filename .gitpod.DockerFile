@@ -13,13 +13,15 @@ RUN chown -R $ROLE:$ROLE /var/ybdp \
   && chown -R $ROLE:$ROLE /usr/local/yugabyte
 
 USER $ROLE
-RUN curl -sSLo ./yugabyte.tar.gzhttps://downloads.yugabyte.com/releases/${YB_VERSION}/yugabyte-${YB_VERSION}-${YB_BUILD}.tar.gz \
+RUN curl -sSLo ./yugabyte.tar.gz https://downloads.yugabyte.com/releases/${YB_VERSION}/yugabyte-${YB_VERSION}-${YB_BUILD}.tar.gz \
   && tar -xvf yugabyte.tar.gz -C $YB_PATH --strip-components=1 \
   && chmod +x $YB_PATH/bin/* \
   && rm ./yugabyte.tar.gz
 RUN ["/usr/local/yugabyte/bin/post_install.sh"]
 RUN echo "\n# yugabytedb executable path" >> ~/.bashrc
 RUN echo "export PATH=\$PATH:$YB_PATH/bin/" >> ~/.bashrc
+RUN sudo install-packages python3.7 python3-pip python3.7-dev
+
 
 ENV HOST_LB1=127.0.0.1
 ENV HOST_LB2=127.0.0.2
