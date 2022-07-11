@@ -49,4 +49,3 @@ ports:
 vscode:
   extensions:
     - GitHub.vscode-pull-request-github
-    -
