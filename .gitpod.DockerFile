@@ -1,4 +1,4 @@
-FROM gitpod/workspace-full
+FROM gitpod/workspace-full:latest
 
 ARG YB_VERSION=2.15.0.0
 ARG YB_BUILD=b11-darwin-x86_64
