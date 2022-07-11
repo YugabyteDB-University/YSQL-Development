@@ -1,0 +1,52 @@
+image:
+  file: .gitpod.Dockerfile
+
+tasks:
+  - name: run-base
+    before: |
+      yugabyted start --base_dir=$STORE/ybd1 --listen=$HOST_LB1 --tserver_flags="placement_cloud=cloud1,placement_region=region1,placement_zone=zone1,ysql_num_shards_per_tserver=1,ysql_beta_features=true" --tserver_webserver_port $TSERVER_WEBSERVER_PORT --master_flags="placement_cloud=cloud1,placement_region=region1,placement_zone=zone1,ysql_num_shards_per_tserver=1" --master_webserver_port $MASTER_WEBSERVER_PORT
+      gp sync-done base
+  - name: run-lb2
+    before: |
+      gp sync-await base
+      yugabyted start --base_dir=$STORE/ybd2 --listen=$HOST_LB2 --join=$HOST_LB --tserver_flags="placement_cloud=cloud1,placement_region=region1,placement_zone=zone1,ysql_num_shards_per_tserver=1,ysql_beta_features=true" --tserver_webserver_port $TSERVER_WEBSERVER_PORT --master_flags="placement_cloud=cloud1,placement_region=region1,placement_zone=zone2,ysql_num_shards_per_tserver=1" --master_webserver_port $MASTER_WEBSERVER_PORT
+      gp sync-done lb2
+  - name: run-lb3
+    before: |
+      gp sync-await lb2
+      yugabyted start --base_dir=$STORE/ybd3 --listen=$HOST_LB3 --join=$HOST_LB --tserver_flags="placement_cloud=cloud1,placement_region=region1,placement_zone=zone1,ysql_num_shards_per_tserver=1,ysql_beta_features=true" --tserver_webserver_port $TSERVER_WEBSERVER_PORT --master_flags="placement_cloud=cloud1,placement_region=region1,placement_zone=zone3,ysql_num_shards_per_tserver=1" --master_webserver_port $MASTER_WEBSERVER_PORT
+      gp sync-done lb3
+  - name: cluster-config
+    before: |
+      gp sync-await lb3
+      yb-admin -master_addresses $HOST_LB1:7100,$HOST_LB2:7100,$HOST_LB3:7100 modify_placement_info cloud1.region1.zone1,cloud1.region1.zone2,cloud1.region1.zone3 3
+  - name: shell
+    command: |
+      gp await-port 5433
+      ysqlsh
+            
+# exposed ports
+ports:
+  - port: 7000
+    onOpen: notify
+  - port: 8200
+    onOpen: notify
+  - port: 37843
+    onOpen: ignore
+  - port: 7100
+    onOpen: ignore
+  - port: 9100
+    onOpen: ignore
+  - port: 5433
+    onOpen: notify
+  - port: 13000
+    onOpen: ignore
+  - port: 9042
+    onOpen: notify
+  - port: 12000
+    onOpen: ignore
+
+vscode:
+  extensions:
+    - GitHub.vscode-pull-request-github
+    -
