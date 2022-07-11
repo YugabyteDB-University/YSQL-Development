@@ -13,7 +13,7 @@ RUN chown -R $ROLE:$ROLE /var/ybdp \
   && chown -R $ROLE:$ROLE /usr/local/yugabyte
 
 USER $ROLE
-RUN curl -sSLo ./yugabyte.tar.gzhttps://downloads.yugabyte.com/releases/${YB_VERSION}/yugabyte-${YB_VERSION}-${ YB_BUILD}.tar.gz \
+RUN curl -sSLo ./yugabyte.tar.gzhttps://downloads.yugabyte.com/releases/${YB_VERSION}/yugabyte-${YB_VERSION}-${YB_BUILD}.tar.gz \
   && tar -xvf yugabyte.tar.gz -C $YB_PATH --strip-components=1 \
   && chmod +x $YB_PATH/bin/* \
   && rm ./yugabyte.tar.gz
