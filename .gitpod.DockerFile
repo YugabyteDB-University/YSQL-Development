@@ -23,7 +23,7 @@ RUN echo "export PATH=\$PATH:$YB_PATH/bin/" >> ~/.bashrc
 RUN sudo install-packages \
   python3.7 \
   python3-pip \
-  python3.7-dev
+  python3-dev
 
 ENV HOST_LB1=127.0.0.1
 ENV HOST_LB2=127.0.0.2
