@@ -11,7 +11,7 @@ RUN mkdir -p $YB_PATH \
   && mkdir -p /var/ybdp
 RUN chown -R $ROLE:$ROLE /var/ybdp \
   && chown -R $ROLE:$ROLE /usr/local/yugabyte
-RUN echo always | sudo tee /sys/kernel/mm/transparent_hugepage/enabled 
+
 
 USER $ROLE
 RUN sudo install-packages \
