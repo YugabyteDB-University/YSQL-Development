@@ -16,7 +16,7 @@ RUN curl -sSLo ./yugabyte.tar.gz https://downloads.yugabyte.com/releases/2.15.0.
   && tar -xvf yugabyte.tar.gz -C $YB_PATH --strip-components=1 \
   && chmod +x $YB_PATH/bin/* \
   && rm ./yugabyte.tar.gz
-RUN ["$YB_PATH/bin/post_install.sh"]
+RUN $YB_PATH/bin/post_install.shß
 RUN echo "\n# yugabytedb executable path" >> ~/.bashrc
 RUN echo "export PATH=\$PATH:$YB_PATH/bin/" >> ~/.bashrc
 
