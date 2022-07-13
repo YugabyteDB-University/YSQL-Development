@@ -1,5 +1,5 @@
 image:
-  file: .gitpod.dockerybu
+  file: .gitpod.DockerFile
 tasks:
   - name: run
     command: |
