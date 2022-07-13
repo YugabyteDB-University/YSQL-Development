@@ -3,36 +3,35 @@ image:
 tasks:
   - name: run
     command: |
-      yugabyted start \
-      --base_dir=$STORE \
-      --listen=$HOST_LB1 \
-      --tserver_flags="placement_cloud=cloud1,placement_region=region1,placement_zone=zone1,ysql_num_shards_per_tserver=1,ysql_beta_features=true,tserver_webserver_port=8201" \
-      --master_flags="placement_cloud=cloud1,placement_region=region1,placement_zone=zone1,ysql_num_shards_per_tserver=1,master_webserver_port=7001" 
+      yb-ctl --rf 3 create  \
+      --data_dir=$STORE \
+      --tserver_flags "yb_num_shards_per_tserver=1,ysql_num_shards_per_tserver=1,ysql_beta_features=true,webserver_port=8200 \
+      --master_flags "yb_num_shards_per_tserver=1,ysql_num_shards_per_tserver=1" \
+      --num_shards_per_tserver=1  \
+      --placement_info "azure.region1.zone1,azure.region1.zone2,azure.region1.zone3" 
       gp await-port 5433
       ysqlsh
-            
-# exposed ports
 ports:
   - port: 7000
     onOpen: notify
-  - port: 7001
-    onOpen: notify
-  - port: 7002
-    onOpen: notify
-  - port: 7003
-    onOpen: notify
-  - port: 8201
-    onOpen: notify
-  - port: 8202
-    onOpen: notify
-  - port: 8203
+  - port: 8200
     onOpen: notify
   - port: 37843
     onOpen: ignore
   - port: 7100
     onOpen: ignore
   - port: 9000
-    onOpen: notify
+    onOpen: ignore
+  - port: 9001
+    onOpen: ignore
+  - port: 9002
+    onOpen: ignore
+  - port: 9003
+    onOpen: ignore
+  - port: 9004
+    onOpen: ignore
+  - port: 9005
+    onOpen: ignore
   - port: 9100
     onOpen: ignore
   - port: 5433
@@ -43,10 +42,10 @@ ports:
     onOpen: notify
   - port: 12000
     onOpen: ignore
-
 vscode:
   extensions:
     - ms-python.python
     - ms-toolsai.jupyter
     - ms-toolsai.jupyter-keymap
     - ms-toolsai.jupyter-renderers
+experimentalNetwork: true     
