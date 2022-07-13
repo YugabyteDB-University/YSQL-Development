@@ -4,7 +4,7 @@ tasks:
   - name: run
     command: |
       yb-ctl --rf 3 create  \
-      --data_dir=$STORE \
+      --data_dir $STORE \
       --tserver_flags "yb_num_shards_per_tserver=1,ysql_num_shards_per_tserver=1,ysql_beta_features=true,webserver_port=8200 \
       --master_flags "yb_num_shards_per_tserver=1,ysql_num_shards_per_tserver=1" \
       --num_shards_per_tserver=1  \
