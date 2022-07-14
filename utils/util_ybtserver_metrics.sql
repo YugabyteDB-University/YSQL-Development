@@ -4,6 +4,8 @@ Website: https://university.yugabyte.com
 Author: Seth Luersen
 Purpose: Utility user-defined functions to gather metrics for YB-TServers
 */
+
+-- for crosstab
 -- for crosstab
 
 create extension if not exists tablefunc;
@@ -180,6 +182,7 @@ where 1=1
 and table_name not in ('metrics','ybwr_snapshots')
 and metric_name not in ('follower_lag_ms')
 order by ts desc, namespace_name, table_name, table_id, host, tablet_id, is_raft_leader, "table" desc, value desc, metric_name;
+
 -- select * from vw_yb_tserver_metrics_snap_and_show_tablet_load;
 
 
@@ -207,9 +210,65 @@ select
 
 -- crosstab function
 
+create or replace function fn_yb_tserver_metrics_snap_and_show_tablet_load_ct(isLocal int default 0)
+returns table (
+    row_name text, 
+    rocksdb_number_db_seek numeric,
+    rocksdb_number_db_next numeric,
+    rows_inserted numeric
+)
+language plpgsql
+as $DO$
+begin
+
+    if isLocal = 1 then
+        return query
+        select 
+        ct_row_name
+        , "ct_rocksdb_number_db_seek"
+        , "ct_rocksdb_number_db_next"
+        , "ct_rows_inserted"
+        from crosstab($$
+            select 
+                format('%s | %s | %s | %s | %s', namespace_name, table_name, format('http://%s:7000/table?id=%s',host,table_id),tablet_id, case is_raft_leader when 0 then ' ' else 'L' end) vw_row_name, 
+                metric_name category, 
+                sum(value)
+            from vw_yb_tserver_metrics_snap_and_show_tablet_load 
+            where 1=1
+            and metric_name in ('rocksdb_number_db_seek','rocksdb_number_db_next','rows_inserted') 
+            group by namespace_name, table_name, host, table_id, tablet_id, is_raft_leader, metric_name
+            order by 1, 2 desc,3
+            $$) 
+        as (ct_row_name text, "ct_rocksdb_number_db_seek" numeric, "ct_rocksdb_number_db_next" numeric, "ct_rows_inserted" decimal);
+     else
+        return query
+        select 
+            ct_row_name
+            , "ct_rocksdb_number_db_seek"
+            , "ct_rocksdb_number_db_next"
+            , "ct_rows_inserted"
+            from crosstab($$
+                select 
+                    format('%s | %s | %s | %s | %s', namespace_name, table_name, table_id, tablet_id, case is_raft_leader when 0 then ' ' else 'L' end) vw_row_name, 
+                    metric_name category, 
+                    sum(value)
+                from vw_yb_tserver_metrics_snap_and_show_tablet_load 
+                where 1=1
+                and metric_name in ('rocksdb_number_db_seek','rocksdb_number_db_next','rows_inserted') 
+                group by namespace_name, table_name, host, table_id, tablet_id, is_raft_leader, metric_name
+                order by 1, 2 desc,3
+                $$) 
+            as (ct_row_name text, "ct_rocksdb_number_db_seek" numeric, "ct_rocksdb_number_db_next" numeric, "ct_rows_inserted" decimal);
+     end if;
+end; $DO$;
+
+
+
+
+
 drop function if exists fn_yb_tserver_metrics_snap_table;
 
-create or replace function fn_yb_tserver_metrics_snap_table()
+create or replace function fn_yb_tserver_metrics_snap_table(isLocal int default 0)
 returns table (
     row_name text, 
     rocksdb_number_db_seek numeric,
@@ -221,7 +280,7 @@ as $DO$
 begin
     return query
     select * 
-    from vw_yb_tserver_metrics_snap_and_show_tablet_load_ct;
+    from fn_yb_tserver_metrics_snap_and_show_tablet_load_ct(isLocal);
 end; $DO$;
 
 
@@ -243,6 +302,6 @@ fn_yb_tserver_metrics_snap()
 
 
 fn_yb_tserver_metrics_snap_table
-.. vw_yb_tserver_metrics_snap_and_show_tablet_load_ct
+.. fn_yb_tserver_metrics_snap_and_show_tablet_load_ct
 ....  vw_yb_tserver_metrics_snap_and_show_tablet_load
 */
