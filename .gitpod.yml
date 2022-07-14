@@ -3,6 +3,9 @@ image:
 tasks:
   - name: run
     command: |
+      pip install ipython-sql
+      pip install sqlalchemy
+      pip install psycopg2
       yb-ctl create  \
       --rf 3 \
       --tserver_flags "yb_num_shards_per_tserver=1,ysql_num_shards_per_tserver=1,ysql_beta_features=true,webserver_port=8200" \
@@ -20,17 +23,7 @@ ports:
     onOpen: ignore
   - port: 7100
     onOpen: ignore
-  - port: 9000
-    onOpen: ignore
-  - port: 9001
-    onOpen: ignore
-  - port: 9002
-    onOpen: ignore
-  - port: 9003
-    onOpen: ignore
-  - port: 9004
-    onOpen: ignore
-  - port: 9005
+  - port: 9000-9005
     onOpen: ignore
   - port: 9100
     onOpen: ignore
@@ -39,7 +32,7 @@ ports:
   - port: 13000
     onOpen: ignore
   - port: 9042
-    onOpen: notify
+    onOpen: ignore
   - port: 12000
     onOpen: ignore
 vscode:
