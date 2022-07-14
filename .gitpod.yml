@@ -10,12 +10,12 @@ tasks:
       --num_shards_per_tserver 1  \
       --placement_info "azure.region1.zone1,azure.region1.zone2,azure.region1.zone3" 
       gp await-port 5433
-      ysqlsh
+      gp open 01_Lab_Requirements_Setup.ipynb
 ports:
   - port: 7000
-    onOpen: notify
+    onOpen: open-browser
   - port: 8200
-    onOpen: notify
+    onOpen: open-browser
   - port: 37843
     onOpen: ignore
   - port: 7100
