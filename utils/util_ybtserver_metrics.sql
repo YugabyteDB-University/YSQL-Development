@@ -267,3 +267,22 @@ begin
 end; $DO$;
 
 
+create or replace function fn_yb_create_stmts() 
+returns timestamptz as $DO$
+begin
+
+    if (select count(*) from pg_prepared_statements where 1=1 and name in ('stmt_util_metrics_snap_tablet','stmt_util_metrics_snap_table','stmt_util_metrics_snap_reset')) > 0  then 
+        deallocate stmt_util_metrics_snap_reset;
+        deallocate stmt_util_metrics_snap_table;
+        deallocate stmt_util_metrics_snap_tablet;
+    end if;
+
+    execute format('prepare stmt_util_metrics_snap_reset as select '''' as "ybwr metrics" where fn_yb_tserver_metrics_snap() is null');
+    execute format('prepare stmt_util_metrics_snap_table as select row_name as "[dbname | relname | tableid | tabletid | isLeader]", rocksdb_number_db_seek, rocksdb_number_db_next, rows_inserted from fn_yb_tserver_metrics_snap_table(0)');
+    execute format(' prepare stmt_util_metrics_snap_tablet as select * from vw_yb_tserver_metrics_snap_and_show_tablet_load where 1=1 and metric_name in (''rows_inserted'',''rocksdb_number_db_seek'',''rocksdb_number_db_next'')');
+
+  return clock_timestamp(); 
+end; 
+$DO$ language plpgsql;
+
+
