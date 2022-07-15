@@ -1,3 +1,11 @@
+/* 
+util_ybtserver_metrics.sql
+Website: https://university.yugabyte.com
+Author: Seth Luersen
+Purpose: Utility user-defined functions to gather metrics for YB-TServers
+Inspiration: https://github.com/FranckPachot/ybdemo/blob/main/docker/yb-lab/client/ybwr.sql
+*/
+
 -- for crosstab
 
 create extension if not exists tablefunc;
@@ -24,7 +32,7 @@ create table if not exists tbl_yb_tserver_metrics_snapshots(
 -- default is 9000, but there is a conflict for the ipykernel_launcher
 -- create or replace function fn_test()
 
-create or replace function fn_yb_tserver_metrics_snap(snaps_to_keep int default 1,yb_tserver_webport int default 8200) 
+create or replace function fn_yb_tserver_metrics_snap(snaps_to_keep int default 1, yb_tserver_webport int default 8200) 
 returns timestamptz as $DO$
 declare i record; 
 begin
@@ -39,7 +47,7 @@ begin
     for i in (select host from yb_servers()) loop 
          execute format('DROP TABLE if exists tbl_temp');
          execute format('CREATE TEMPORARY TABLE if not exists tbl_temp (host text default ''%s'', metrics jsonb)',i.host);
-         execute format('copy tbl_temp(metrics) from program  ''curl -s http://%s:%s/metrics | jq -c '''' .[] | select(.attributes.namespace_name=="db_ybu" and .type=="tablet") | {type: .type, namespace_name: .attributes.namespace_name, tablet_id: .id, table_name: .attributes.table_name, table_id: .attributes.table_id, namespace_name: .attributes.namespace_name, metrics: .metrics[] | select(.name == ("rows_inserted","rocksdb_number_db_seek","rocksdb_number_db_next","is_raft_leader") ) } '''' ''',i.host,'8200'); 
+         execute format('copy tbl_temp(metrics) from program  ''curl -s http://%s:%s/metrics | jq -c '''' .[] | select(.attributes.namespace_name=="db_ybu" and .type=="tablet") | {type: .type, namespace_name: .attributes.namespace_name, tablet_id: .id, table_name: .attributes.table_name, table_id: .attributes.table_id, namespace_name: .attributes.namespace_name, metrics: .metrics[] | select(.name == ("rows_inserted","rocksdb_number_db_seek","rocksdb_number_db_next","is_raft_leader") ) } '''' ''',i.host,yb_tserver_webport); 
         insert into tbl_yb_tserver_metrics_snapshots (host, metrics) select host, metrics from tbl_temp;
         execute format('DROP TABLE if exists tbl_temp');
 
@@ -240,9 +248,6 @@ begin
             as (ct_row_name text, "ct_rocksdb_number_db_seek" numeric, "ct_rocksdb_number_db_next" numeric, "ct_rows_inserted" decimal);
      end if;
 end; $DO$;
-
-
-
 
 
 
