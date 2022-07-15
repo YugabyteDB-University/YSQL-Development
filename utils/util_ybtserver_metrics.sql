@@ -235,7 +235,7 @@ begin
      else
         return query
         select 
-        REPLACE( ct_row_name, '127.0.0.1',  gitpod_url ) as ct_row_name
+        REPLACE( ct_row_name, 'http://127.0.0.1:7000',  gitpod_url ) as ct_row_name
         , "ct_rocksdb_number_db_seek"
         , "ct_rocksdb_number_db_next"
         , "ct_rows_inserted"
@@ -273,29 +273,55 @@ returns table (
 language plpgsql
 as $BODY$
 begin
-    return query
-    select 
-        value
-        , rate
-        , namespace_name
-        , table_name
-        , table_id
-        , REPLACE(host, '127.0.0.1',  gitpod_url ) as host
-        , tablet_id
-        , is_raft_leader
-        , metric_name
-        , to_char(100*value/sum(value)
-            over(
-                partition by
-                namespace_name, table_name, table_id, metric_name),'999%') as "percent_table"
-        , sum(value)
-            over(
-                partition by
-                namespace_name, table_name, table_id, metric_name) as "ops"
-        from vw_yb_tserver_metrics_last , fn_yb_tserver_metrics_snap()
-        where 1=1
-        and table_name not in ('tbl_yb_tserver_metrics_snapshots')
-        order by ts desc, namespace_name, table_name, table_id, host, tablet_id, is_raft_leader, "table" desc, value desc, metric_name;
+    if gitpod_url = '127.0.0.1' then
+        return query
+        select 
+            value
+            , rate
+            , namespace_name
+            , table_name
+            , table_id
+            , host
+            , tablet_id
+            , is_raft_leader
+            , metric_name
+            , to_char(100*value/sum(value)
+                over(
+                    partition by
+                    namespace_name, table_name, table_id, metric_name),'999%') as "percent_table"
+            , sum(value)
+                over(
+                    partition by
+                    namespace_name, table_name, table_id, metric_name) as "ops"
+            from vw_yb_tserver_metrics_last , fn_yb_tserver_metrics_snap()
+            where 1=1
+            and table_name not in ('tbl_yb_tserver_metrics_snapshots')
+            order by ts desc, namespace_name, table_name, table_id, host, tablet_id, is_raft_leader, "table" desc, value desc, metric_name;
+    else
+        return query
+        select 
+            value
+            , rate
+            , namespace_name
+            , table_name
+            , table_id
+            , REPLACE(host, 'http://127.0.0.1:7000',  gitpod_url ) as host
+            , tablet_id
+            , is_raft_leader
+            , metric_name
+            , to_char(100*value/sum(value)
+                over(
+                    partition by
+                    namespace_name, table_name, table_id, metric_name),'999%') as "percent_table"
+            , sum(value)
+                over(
+                    partition by
+                    namespace_name, table_name, table_id, metric_name) as "ops"
+            from vw_yb_tserver_metrics_last , fn_yb_tserver_metrics_snap()
+            where 1=1
+            and table_name not in ('tbl_yb_tserver_metrics_snapshots')
+            order by ts desc, namespace_name, table_name, table_id, host, tablet_id, is_raft_leader, "table" desc, value desc, metric_name;
+    end if;
 end; $BODY$;
 
 
