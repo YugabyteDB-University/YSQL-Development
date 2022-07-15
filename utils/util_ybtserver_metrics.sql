@@ -1,34 +1,33 @@
-/* 
-util_ybtserver_metrics.sql
-Website: https://university.yugabyte.com
-Author: Seth Luersen
-Purpose: Utility user-defined functions to gather metrics for YB-TServers
-*/
-
--- for crosstab
 -- for crosstab
 
 create extension if not exists tablefunc;
 
 -- drop all
 drop table if exists tbl_yb_tserver_metrics_snapshots cascade;
+drop function if exists fn_yb_tserver_metrics_snap;
+drop view if exists vw_yb_tserver_metrics_snapshot_tablets;
+drop view if exists vw_yb_tserver_metrics_report;
+drop view if exists vw_yb_tserver_metrics_snapshot_tablets_metrics;
+drop view if exists vw_yb_tserver_metrics_snap_and_show_tablet_load;
+drop function if exists fn_yb_tserver_metrics_snap_and_show_tablet_load_ct;
+drop view if exists vw_yb_tserver_metrics_snap_and_show_tablet_load;
+drop function if exists fn_yb_tserver_metrics_snap_table;
+drop view if exists vw_yb_tserver_metrics_snapshot_tablets_metrics;
 
 -- create
 create table if not exists tbl_yb_tserver_metrics_snapshots(
     host text default '',
     ts timestamptz default now(), 
-    metrics jsonb,
-    primary key (host asc, ts asc));
-
-
-drop function if exists fn_yb_tserver_metrics_snap;
+    metrics json);
 
 -- modify to yb_tserver_webport flag, 8200
 -- default is 9000, but there is a conflict for the ipykernel_launcher
-create or replace function fn_yb_tserver_metrics_snap(snaps_to_keep int default 1,yb_tserver_webport int default 8200) returns timestamptz as $DO$
+-- create or replace function fn_test()
+
+create or replace function fn_yb_tserver_metrics_snap(snaps_to_keep int default 1,yb_tserver_webport int default 8200) 
+returns timestamptz as $DO$
 declare i record; 
 begin
-
     delete from tbl_yb_tserver_metrics_snapshots 
     where 1=1
     and ts not in (
@@ -36,55 +35,37 @@ begin
         from tbl_yb_tserver_metrics_snapshots
         order by ts desc
         limit snaps_to_keep);
-    
+
     for i in (select host from yb_servers()) loop 
-        execute format(
-        $COPY$
-        copy tbl_yb_tserver_metrics_snapshots(host,metrics) from program
-        $BASH$
-        exec 5<>/dev/tcp/%s/%s ; awk 'BEGIN{printf "%s\t"}/[[]/{in_json=1}in_json==1{printf $0}' <&5 & printf "GET /metrics HTTP/1.0\r\n\r\n" >&5
-        $BASH$
-        $COPY$
-        ,i.host,yb_tserver_webport,i.host); 
+         execute format('DROP TABLE if exists tbl_temp');
+         execute format('CREATE TEMPORARY TABLE if not exists tbl_temp (host text default ''%s'', metrics jsonb)',i.host);
+         execute format('copy tbl_temp(metrics) from program  ''curl -s http://%s:%s/metrics | jq -c '''' .[] | select(.attributes.namespace_name=="db_ybu" and .type=="tablet") | {type: .type, namespace_name: .attributes.namespace_name, tablet_id: .id, table_name: .attributes.table_name, table_id: .attributes.table_id, namespace_name: .attributes.namespace_name, metrics: .metrics[] | select(.name == ("rows_inserted","rocksdb_number_db_seek","rocksdb_number_db_next","is_raft_leader") ) } '''' ''',i.host,'8200'); 
+        insert into tbl_yb_tserver_metrics_snapshots (host, metrics) select host, metrics from tbl_temp;
+        execute format('DROP TABLE if exists tbl_temp');
+
     end loop; 
 
-    update tbl_yb_tserver_metrics_snapshots y
-    set    metrics = y2.metrics
-    from  (
-    select host, ts, array_to_json(array_agg(elems)) as metrics
-    from tbl_yb_tserver_metrics_snapshots t
-        , jsonb_array_elements(metrics) elems
-    where 1=1
-        and elems->'attributes'->>'namespace_name' <> 'system'
-        and elems->'attributes'->>'namespace_name' <> ''
-    group by 1,2
-    ) y2
-    where 1=1
-        and y2.host = y.host 
-        and y2.ts = y.ts;
-     
     return clock_timestamp(); 
 end; 
 $DO$ language plpgsql;
 
+-- select * from vw_yb_tserver_metrics_snapshot_tablets;
 
 create or replace view vw_yb_tserver_metrics_snapshot_tablets as
 select 
     host
-    ,ts
-    ,jsonb_array_elements(metrics)->>'type' as type
-    ,jsonb_array_elements(metrics)->>'id'   as tablet_id
-    ,jsonb_array_elements(metrics)->'attributes'->>'namespace_name' as namespace_name
-    ,jsonb_array_elements(metrics)->'attributes'->>'table_name' as table_name
-    ,jsonb_array_elements(metrics)->'attributes'->>'table_id' as table_id
-    ,jsonb_array_elements(jsonb_array_elements(metrics)->'metrics')->>'name' as metric_name
-    ,(jsonb_array_elements(jsonb_array_elements(metrics)->'metrics')->>'value')::numeric as metric_value
-    ,(jsonb_array_elements(jsonb_array_elements(metrics)->'metrics')->>'total_sum')::numeric as metric_sum
-    ,(jsonb_array_elements(jsonb_array_elements(metrics)->'metrics')->>'total_count')::numeric as metric_count
-    from tbl_yb_tserver_metrics_snapshots
-    where 1=1;
+    , ts
+    , (metrics ->> 'type') as type
+    , (metrics ->> 'tablet_id') as tablet_id 
+    , (metrics ->> 'namespace_name') as namespace_name
+    , (metrics ->> 'table_name') as table_name 
+    , (metrics ->> 'table_id') as table_id 
+    , (metrics -> 'metrics' ->> 'name') as metric_name
+    , (metrics -> 'metrics' ->> 'value')::numeric as metric_value
+    from tbl_yb_tserver_metrics_snapshots;
+    
 
--- select * from vw_yb_tserver_metrics_snapshot_tablets;
+
 
 -- drop view if exists vw_yb_tserver_metrics_snapshot_tablets_metrics;
 
@@ -97,10 +78,7 @@ select
     , table_name
     , table_id
     , tablet_id
-    , sum(case when metric_name='is_raft_leader' then metric_value end)over(
-        partition by
-        host, namespace_name, table_name, table_id, tablet_id, ts)
-    as is_raft_leader
+    , sum(case when metric_name='is_raft_leader' then metric_value end)over(partition by host, namespace_name, table_name, table_id, tablet_id, ts) as is_raft_leader
     , metric_value-lead(metric_value)
         over(
             partition by 
@@ -115,18 +93,17 @@ select
         partition by
         host, namespace_name, table_name, table_id,tablet_id, metric_name 
         order by ts desc) as relative_snap_id
-    , metric_value
-    , metric_sum
-    , metric_count
+   , metric_value
+   -- , metric_sum
+   -- , metric_count
     from vw_yb_tserver_metrics_snapshot_tablets
     where 1=1 
-    and table_name not in('metrics','tbl_yb_tserver_metrics_snapshots')
-    and namespace_name <> 'system'
+    and table_name not in('tbl_yb_tserver_metrics_snapshots')
+   -- and namespace_name <> 'system'
     and namespace_name IS NOT NULL;
 
 -- select * from vw_yb_tserver_metrics_snapshot_tablets_metrics;
 
--- drop view if exists vw_yb_tserver_metrics_report;
 
 create or replace view vw_yb_tserver_metrics_report as
 select 
@@ -150,6 +127,7 @@ and value>0;
 -- select * from vw_yb_tserver_metrics_report;
 
 -- a convenient "ybwr_last" shows the last snapshot:
+
 create or replace view vw_yb_tserver_metrics_last as 
 select * 
 from vw_yb_tserver_metrics_report 
@@ -158,6 +136,7 @@ and relative_snap_id=1;
 
 
 -- a convenient "ybwr_snap_and_show_tablet_load" takes a snapshot and show the metrics
+
 create or replace view vw_yb_tserver_metrics_snap_and_show_tablet_load as 
 select 
     value
@@ -179,8 +158,7 @@ select
             namespace_name, table_name, table_id, metric_name) as "table"
 from vw_yb_tserver_metrics_last , fn_yb_tserver_metrics_snap()
 where 1=1
-and table_name not in ('metrics','ybwr_snapshots')
-and metric_name not in ('follower_lag_ms')
+and table_name not in ('tbl_yb_tserver_metrics_snapshots')
 order by ts desc, namespace_name, table_name, table_id, host, tablet_id, is_raft_leader, "table" desc, value desc, metric_name;
 
 -- select * from vw_yb_tserver_metrics_snap_and_show_tablet_load;
@@ -188,6 +166,7 @@ order by ts desc, namespace_name, table_name, table_id, host, tablet_id, is_raft
 
 
 -- crosstab view
+
 create or replace view vw_yb_tserver_metrics_snap_and_show_tablet_load_ct as 
 select 
    ct_row_name
@@ -266,7 +245,6 @@ end; $DO$;
 
 
 
-drop function if exists fn_yb_tserver_metrics_snap_table;
 
 create or replace function fn_yb_tserver_metrics_snap_table(isLocal int default 0)
 returns table (
@@ -284,24 +262,3 @@ begin
 end; $DO$;
 
 
-/*
-ybwr_report -- >
-.. vw_yb_tserver_metrics_report
-.... vw_yb_tserver_metrics_snapshot_tablets_metrics
-...... vw_yb_tserver_metrics_snapshot_tablets
-........ tbl_yb_tserver_metrics_snapshots
-
-ybwr_snap_and_show_tablet_load -->
-vw_yb_tserver_metrics_snap_and_show_tablet_load 
-.. vw_yb_tserver_metrics_last  fn_yb_tserver_metrics_snap()
-.... vw_yb_tserver_metrics_report 
-
-
-fn_yb_tserver_metrics_snap()
-.. tbl_yb_tserver_metrics_snapshots
-
-
-fn_yb_tserver_metrics_snap_table
-.. fn_yb_tserver_metrics_snap_and_show_tablet_load_ct
-....  vw_yb_tserver_metrics_snap_and_show_tablet_load
-*/
