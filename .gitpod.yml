@@ -18,19 +18,19 @@ tasks:
       yb-ctl status
 ports:
   - port: 7000
-    onOpen: open-browser
+    onOpen: open-preview
   - port: 8200
-    onOpen: open-browser
+    onOpen: open-preview
   - port: 37843
     onOpen: ignore
   - port: 7100
     onOpen: ignore
-  - port: 9000-9005
+  - port: 9000-9040
     onOpen: ignore
   - port: 9100
     onOpen: ignore
   - port: 5433
-    onOpen: notify
+    onOpen: ignore
   - port: 13000
     onOpen: ignore
   - port: 9042
