@@ -107,3 +107,12 @@ begin
 
 end;
 $BODY$;
+
+
+create or replace function fn_random_chars() 
+returns text
+as
+$BODY$
+return format('%s%s',chr(97+CAST(random() * 25 AS INTEGER)),chr(97+CAST(random() * 25 AS INTEGER)))
+end;
+$BODY$;
