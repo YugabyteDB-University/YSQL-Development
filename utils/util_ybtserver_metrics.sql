@@ -19,6 +19,7 @@ drop function if exists fn_yb_tserver_metrics_snap_and_show_tablet_load;
 drop function if exists fn_yb_tserver_metrics_snap_and_show_tablet_load_ct;
 drop function if exists fn_yb_tserver_metrics_snap_table;
 drop function if exists fn_yb_tserver_metrics_snap;
+drop function if exists fn_get_table_id;
 
 drop table if exists tbl_yb_tserver_metrics_snapshots cascade;
 
@@ -65,6 +66,42 @@ begin
     return clock_timestamp(); 
 end; 
 $DO$ language plpgsql;
+
+
+
+create or replace function fn_get_table_id(p_gitpod_url text default '127.0.0.1', p_tserver_webport int default 8200, p_table_name text default '') 
+returns table (
+    table_id text
+)
+as $DO$
+declare i record; 
+begin
+
+    if (p_table_name <> '') then
+        for i in (select host from yb_servers() order by host limit 1) loop 
+            execute format('DROP TABLE if exists tbl_temp_id');
+            execute format('CREATE TEMPORARY TABLE if not exists tbl_temp_id (id text)');
+            execute format('copy tbl_temp_id(id) from program  ''curl -s http://%s:%s/metrics | jq --raw-output '''' .[] | select(.attributes.namespace_name=="db_ybu" and .attributes.table_name=="%s" and .type=="tablet" )  | { table_id: .attributes.table_id } | .table_id '''' ''',i.host,p_tserver_webport,p_table_name); 
+        
+        end loop; 
+
+        if (p_gitpod_url <> '127.0.0.1') then
+            return query
+            execute format('select concat(''%s'',''/table?id='', id) from tbl_temp_id limit 1', p_gitpod_url );
+        else
+            return query
+             execute format('select concat(''http://'',''%s'','':7000/table?id='', id) from tbl_temp_id limit 1', p_gitpod_url );
+        end if;
+    
+    else
+        return query
+        select '' as table_id;
+    end if;
+
+end; 
+$DO$ language plpgsql;
+
+
 
 -- select * from vw_yb_tserver_metrics_snapshot_tablets;
 
