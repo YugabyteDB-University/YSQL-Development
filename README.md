@@ -1,5 +1,7 @@
-# YSQLPE001
+# YSQLPE01
+
 YSQL Performance Explained
+
 ---
 This repository contains the notebook files for YSQL Performance Explained, a free course that is soon-to-be available at [university.yugabyte.com](
 https://university.yugabyte.com).
