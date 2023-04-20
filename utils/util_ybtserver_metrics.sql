@@ -39,7 +39,7 @@ create table if not exists tbl_yb_tserver_metrics_snapshots(
 -- default is 9000, but there is a conflict for the ipykernel_launcher
 -- create or replace function fn_test()
 
-create or replace function fn_yb_tserver_metrics_snap(p_snaps_to_keep int default 1, p_tserver_webport int default 8200) 
+create or replace function fn_yb_tserver_metrics_snap(p_snaps_to_keep int default 1, p_tserver_webport int default 8200, p_db_name text default 'db_ybu') 
 returns timestamptz as $DO$
 declare i record; 
 begin
@@ -57,7 +57,7 @@ begin
     for i in (select host from yb_servers()) loop 
          execute format('DROP TABLE if exists tbl_temp');
          execute format('CREATE TEMPORARY TABLE if not exists tbl_temp (host text default ''%s'', metrics jsonb)',i.host);
-         execute format('copy tbl_temp(metrics) from program  ''curl -s http://%s:%s/metrics | jq -c '''' .[] | select(.attributes.namespace_name=="db_ybu" and .type=="tablet") | {type: .type, namespace_name: .attributes.namespace_name, tablet_id: .id, table_name: .attributes.table_name, table_id: .attributes.table_id, namespace_name: .attributes.namespace_name, metrics: .metrics[] | select(.name == ("rows_inserted","rocksdb_number_db_seek","rocksdb_number_db_next","is_raft_leader") ) } '''' ''',i.host,p_tserver_webport); 
+         execute format('copy tbl_temp(metrics) from program  ''curl -s http://%s:%s/metrics | jq -c '''' .[] | select(.attributes.namespace_name=="%s" and .type=="tablet") | {type: .type, namespace_name: .attributes.namespace_name, tablet_id: .id, table_name: .attributes.table_name, table_id: .attributes.table_id, namespace_name: .attributes.namespace_name, metrics: .metrics[] | select(.name == ("rows_inserted","rocksdb_number_db_seek","rocksdb_number_db_next","is_raft_leader") ) } '''' ''',i.host,p_tserver_webport,p_db_name); 
         insert into tbl_yb_tserver_metrics_snapshots (host, metrics) select host, metrics from tbl_temp;
        
 
@@ -69,7 +69,7 @@ $DO$ language plpgsql;
 
 
 
-create or replace function fn_get_table_id(p_gitpod_url text default '127.0.0.1', p_tserver_webport int default 8200, p_table_name text default '') 
+create or replace function fn_get_table_id(p_gitpod_url text default '127.0.0.1', p_tserver_webport int default 8200, p_table_name text default '', p_db_name text default 'db_ybu') 
 returns table (
     table_id text
 )
@@ -81,7 +81,7 @@ begin
         for i in (select host from yb_servers() order by host limit 1) loop 
             execute format('DROP TABLE if exists tbl_temp_id');
             execute format('CREATE TEMPORARY TABLE if not exists tbl_temp_id (id text)');
-            execute format('copy tbl_temp_id(id) from program  ''curl -s http://%s:%s/metrics | jq --raw-output '''' .[] | select(.attributes.namespace_name=="db_ybu" and .attributes.table_name=="%s" and .type=="tablet" )  | { table_id: .attributes.table_id } | .table_id '''' ''',i.host,p_tserver_webport,p_table_name); 
+            execute format('copy tbl_temp_id(id) from program  ''curl -s http://%s:%s/metrics | jq --raw-output '''' .[] | select(.attributes.namespace_name=="%s" and .attributes.table_name=="%s" and .type=="tablet" )  | { table_id: .attributes.table_id } | .table_id '''' ''',i.host,p_tserver_webport,p_db_name,p_table_name); 
         
         end loop; 
 
@@ -304,7 +304,7 @@ begin
 end; $DO$;
 
 
-create or replace function fn_yb_tserver_metrics_snap_and_show_tablet_load(p_gitpod_url text default '127.0.0.1')
+create or replace function fn_yb_tserver_metrics_snap_and_show_tablet_load(p_gitpod_url text default '127.0.0.1', p_db_name text default 'db_ybu')
 returns table (
     value numeric, 
     rate numeric,
@@ -417,7 +417,7 @@ begin
 
     execute format('prepare stmt_util_metrics_snap_table as select row_name as "[dbname | relname | tableid | tabletid | isLeader]", rocksdb_number_db_seek, rocksdb_number_db_next, rows_inserted from fn_yb_tserver_metrics_snap_table(''%s'')',p_gitpod_url);
 
-    execute format(' prepare stmt_util_metrics_snap_tablet as select * from fn_yb_tserver_metrics_snap_and_show_tablet_load(''%s'') where 1=1 and metric_name in (''rows_inserted'',''rocksdb_number_db_seek'',''rocksdb_number_db_next'')',p_gitpod_url);
+    execute format('prepare stmt_util_metrics_snap_tablet as select * from fn_yb_tserver_metrics_snap_and_show_tablet_load(''%s'') where 1=1 and metric_name in (''rows_inserted'',''rocksdb_number_db_seek'',''rocksdb_number_db_next'')',p_gitpod_url);
 
   return clock_timestamp(); 
 end; 

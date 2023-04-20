@@ -1,22 +1,22 @@
-CREATE TABLE transactions (
-  user_id INT NOT NULL,
-  account_id INT NOT NULL,
-  geo_partition TEXT,
-  account_type TEXT NOT NULL,
-  amount NUMERIC NOT NULL,
-  created_at TIMESTAMP DEFAULT NOW()
-) PARTITION BY LIST (geo_partition)
+create table transactions (
+  user_id int not null,
+  account_id int not null,
+  geo_partition text,
+  account_type text not null,
+  amount numeric not null,
+  created_at timestamp default now()
+) partition by list (geo_partition)
 
-CREATE TABLESPACE tblspace_us WITH (
+create tablespace tblspace_us with (
   replica_placement = '{"num_replicas": 1, "placement_blocks":
   [{"cloud": "cloud1", "region": "region1", "zone": "zone1", "min_num_replicas": 1}]}'
 )
 
-CREATE TABLESPACE tblspace_eu WITH (
+create tablespace tblspace_eu with (
   replica_placement = '{"num_replicas": 1, "placement_blocks":
   [{"cloud": "cloud2", "region": "region2", "zone": "zone2", "min_num_replicas": 1}]}'
 )
 
-CREATE TABLESPACE tblspace_ap WITH (
+create tablespace tblspace_ap with (
   replica_placement = '{"num_replicas": 1, "placement_blocks": [{"cloud": "cloud3", "region": "region3", "zone": "zone3", "min_num_replicas": 1}]}'
 )

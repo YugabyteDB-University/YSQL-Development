@@ -1,8 +1,17 @@
-INSERT INTO order_changes
-VALUES (1, 1001, '2022-02-15', 'fix oven');
-INSERT INTO order_changes
-VALUES (1, 1001, '2022-02-10', 'run electric cable');
-INSERT INTO order_changes
-VALUES (2, 2002, '2022-03-5', 'replace shower head');
-INSERT INTO order_changes
-VALUES (3, 2002, '2022-01-25', 'add sprinklers');
+insert into tbl_order_changes values (1, 1001, '2023-01-11', 'fix stove');
+insert into tbl_order_changes values (2, 2002, '2023-01-12', 'replace outlet');
+insert into tbl_order_changes values (3, 3003, '2023-01-13', 'replace lamp');
+insert into tbl_order_changes values (4, 4004, '2023-01-14', 'fix wall');
+insert into tbl_order_changes values (1, 1001, '2023-02-21', 'fix stove again');
+insert into tbl_order_changes values (2, 2002, '2023-02-22', 'replace handle');
+insert into tbl_order_changes values (3, 3003, '2023-02-23', 'replace chair');
+insert into tbl_order_changes values (4, 4004, '2023-02-25', 'fix door');
+insert into tbl_order_changes values (1, 1001, '2023-03-01', 'fix floor');
+insert into tbl_order_changes values (2, 2002, '2023-03-02', 'fix window');
+insert into tbl_order_changes values (3, 3003, '2023-03-03', 'repair closet');
+insert into tbl_order_changes values (4, 4004, '2023-03-04', 'repair outdoor gate');
+insert into tbl_order_changes values (1, 1001, '2023-04-11', 'remove bathtub');
+insert into tbl_order_changes values (2, 2002, '2023-04-12', 'add fire alarm');
+insert into tbl_order_changes values (3, 3003, '2023-04-20', 'replace smoke detector');
+insert into tbl_order_changes values (4, 4004, '2023-04-19', 'add outdoor lights');
+-- insert into tbl_order_changes values (5, 5005, '2022-12-31', 'remove xmas tree');
