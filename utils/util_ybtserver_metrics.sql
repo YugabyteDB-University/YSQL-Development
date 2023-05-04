@@ -19,7 +19,9 @@ drop function if exists fn_yb_tserver_metrics_snap_and_show_tablet_load;
 drop function if exists fn_yb_tserver_metrics_snap_and_show_tablet_load_ct;
 drop function if exists fn_yb_tserver_metrics_snap_table;
 drop function if exists fn_yb_tserver_metrics_snap;
-drop function if exists fn_get_table_id;
+drop function if exists fn_get_table_id_old;
+drop function if exists fn_get_table_id_pg;
+drop function if exists fn_get_table_id_url;
 
 drop table if exists tbl_yb_tserver_metrics_snapshots cascade;
 
@@ -69,37 +71,57 @@ $DO$ language plpgsql;
 
 
 
-create or replace function fn_get_table_id(p_gitpod_url text default '127.0.0.1', p_tserver_webport int default 8200, p_table_name text default '', p_db_name text default 'db_ybu') 
-returns table (
-    table_id text
-)
+-- select fn_get_table_id_from_pg('db_ybu','public','tbl_no_pk');
+create or replace function fn_get_table_id_from_pg(
+    p_db_name text default 'db_ybu', 
+    p_schema_name text default 'public',
+    p_table_name text default 'tbl_demo') 
+returns text
+as $BODY$
+select '0000' || lpad(to_hex(d.oid::int), 4, '0') || '00003000800000000000' || lpad(to_hex(c.oid::int), 4, '0') tableid
+  from pg_class c, pg_namespace n, pg_database d
+where 1=1
+  and d.datname = p_db_name 
+  and n.nspname = p_schema_name
+  and c.relname = p_table_name
+  and c.relnamespace = n.oid
+   -- AND d.datname=current_database();  
+limit 1
+$BODY$ LANGUAGE SQL;
+
+
+-- select fn_get_table_id_url('https://7000-yugabytedbuni-ybugitpod-fake.ws-us53.gitpod.io',7000,'db_ybu','public','tbl_no_pk');
+-- select fn_get_table_id_url('127.0.0.1',7000,'db_ybu','public','tbl_no_pk');
+
+create or replace function fn_get_table_id_url(
+    p_gitpod_url text default '127.0.0.1',
+    p_master_webport int default 7000,
+    p_db_name text default 'db_ybu',
+    p_schema_name text default  'public',
+    p_table_name text default 'tbl_demo'
+) 
+returns text
 as $DO$
-declare i record; 
+declare my_url text ='';
+declare my_table_id text;
+declare my_host text;
 begin
-
-    if (p_table_name <> '') then
-        for i in (select host from yb_servers() order by host limit 1) loop 
-            execute format('DROP TABLE if exists tbl_temp_id');
-            execute format('CREATE TEMPORARY TABLE if not exists tbl_temp_id (id text)');
-            execute format('copy tbl_temp_id(id) from program  ''curl -s http://%s:%s/metrics | jq --raw-output '''' .[] | select(.attributes.namespace_name=="%s" and .attributes.table_name=="%s" and .type=="tablet" )  | { table_id: .attributes.table_id } | .table_id '''' ''',i.host,p_tserver_webport,p_db_name,p_table_name); 
-        
-        end loop; 
-
-        if (p_gitpod_url <> '127.0.0.1') then
-            return query
-            execute format('select concat(''%s'',''/table?id='', id) from tbl_temp_id limit 1', p_gitpod_url );
+    if p_table_name <> '' then
+        my_table_id := fn_get_table_id_from_pg(p_db_name, p_schema_name, p_table_name);
+        if p_gitpod_url IN ('127.0.0.1', '127.0.0.2', '127.0.0.3') then
+            my_host := concat('http://',p_gitpod_url,':',p_master_webport);
         else
-            return query
-             execute format('select concat(''http://'',''%s'','':7000/table?id='', id) from tbl_temp_id limit 1', p_gitpod_url );
+             my_host := p_gitpod_url;
         end if;
-    
-    else
-        return query
-        select '' as table_id;
+        my_url := concat(my_host,'/table?id=',my_table_id);
     end if;
-
+    return my_url;
 end; 
-$DO$ language plpgsql;
+$DO$ 
+language plpgsql;
+
+
+
 
 
 

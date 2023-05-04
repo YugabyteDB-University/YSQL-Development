@@ -118,15 +118,3 @@ select format('%s%s',chr(97+CAST(random() * 25 AS INTEGER)),chr(97+CAST(random()
 $BODY$
 language sql;
 
-
-
-
-create or replace function fn_get_table_id_from_pg(schema_name_p VARCHAR default 'public', table_name_p VARCHAR default 'tbl_demo') RETURNS VARCHAR
-AS $BODY$
-SELECT '0000' || lpad(to_hex(d.oid::int), 4, '0') || '00003000800000000000' || lpad(to_hex(c.oid::int), 4, '0') tableid
-  FROM pg_class c, pg_namespace n, pg_database d
- WHERE n.nspname = $1
-   AND c.relname = $2
-   AND c.relnamespace = n.oid
-   AND d.datname=current_database();
-$BODY$ LANGUAGE SQL;
