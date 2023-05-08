@@ -12,8 +12,6 @@ create extension if not exists tablefunc;
 
 -- drop all
 
-
-
 drop function if exists fn_yb_create_stmts; 
 drop function if exists fn_yb_tserver_metrics_snap_and_show_tablet_load;
 drop function if exists fn_yb_tserver_metrics_snap_and_show_tablet_load_ct;
@@ -39,7 +37,7 @@ create table if not exists tbl_yb_tserver_metrics_snapshots(
 
 -- modify to yb_tserver_webport flag, 8200
 -- default is 9000, but there is a conflict for the ipykernel_launcher
--- create or replace function fn_test()
+-- replace curl with wget for gitpod and 2.16+
 
 create or replace function fn_yb_tserver_metrics_snap(p_snaps_to_keep int default 1, p_tserver_webport int default 8200, p_db_name text default 'db_ybu') 
 returns timestamptz as $DO$
@@ -59,7 +57,8 @@ begin
     for i in (select host from yb_servers()) loop 
          execute format('DROP TABLE if exists tbl_temp');
          execute format('CREATE TEMPORARY TABLE if not exists tbl_temp (host text default ''%s'', metrics jsonb)',i.host);
-         execute format('copy tbl_temp(metrics) from program  ''curl -s http://%s:%s/metrics | jq -c '''' .[] | select(.attributes.namespace_name=="%s" and .type=="tablet") | {type: .type, namespace_name: .attributes.namespace_name, tablet_id: .id, table_name: .attributes.table_name, table_id: .attributes.table_id, namespace_name: .attributes.namespace_name, metrics: .metrics[] | select(.name == ("rows_inserted","rocksdb_number_db_seek","rocksdb_number_db_next","is_raft_leader") ) } '''' ''',i.host,p_tserver_webport,p_db_name); 
+         execute format('copy tbl_temp(metrics) from program  ''wget -cq  http://%s:%s/metrics  -O - | jq -c '''' .[] | select(.attributes.namespace_name=="%s" and .type=="tablet") | {type: .type, namespace_name: .attributes.namespace_name, tablet_id: .id, table_name: .attributes.table_name, table_id: .attributes.table_id, namespace_name: .attributes.namespace_name, metrics: .metrics[] | select(.name == ("rows_inserted","rocksdb_number_db_seek","rocksdb_number_db_next","is_raft_leader") ) } '''' ''',i.host,p_tserver_webport,p_db_name); 
+        -- execute format('copy tbl_temp(metrics) from program  ''curl -s http://%s:%s/metrics | jq -c '''' .[] | select(.attributes.namespace_name=="%s" and .type=="tablet") | {type: .type, namespace_name: .attributes.namespace_name, tablet_id: .id, table_name: .attributes.table_name, table_id: .attributes.table_id, namespace_name: .attributes.namespace_name, metrics: .metrics[] | select(.name == ("rows_inserted","rocksdb_number_db_seek","rocksdb_number_db_next","is_raft_leader") ) } '''' ''',i.host,p_tserver_webport,p_db_name); 
         insert into tbl_yb_tserver_metrics_snapshots (host, metrics) select host, metrics from tbl_temp;
        
 
@@ -68,6 +67,7 @@ begin
     return clock_timestamp(); 
 end; 
 $DO$ language plpgsql;
+
 
 
 
