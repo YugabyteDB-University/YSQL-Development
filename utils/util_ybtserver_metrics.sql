@@ -55,15 +55,17 @@ begin
     end if;
 
     for i in (select host from yb_servers()) loop 
-         execute format('DROP TABLE if exists tbl_temp');
+         execute format('drop table if exists tbl_temp');
+         perform pg_sleep(1);
          execute format('CREATE TEMPORARY TABLE if not exists tbl_temp (host text default ''%s'', metrics jsonb)',i.host);
+         perform pg_sleep(1);
          execute format('copy tbl_temp(metrics) from program  ''wget -cq  http://%s:%s/metrics  -O - | jq -c '''' .[] | select(.attributes.namespace_name=="%s" and .type=="tablet") | {type: .type, namespace_name: .attributes.namespace_name, tablet_id: .id, table_name: .attributes.table_name, table_id: .attributes.table_id, namespace_name: .attributes.namespace_name, metrics: .metrics[] | select(.name == ("rows_inserted","rocksdb_number_db_seek","rocksdb_number_db_next","is_raft_leader") ) } '''' ''',i.host,p_tserver_webport,p_db_name); 
         -- execute format('copy tbl_temp(metrics) from program  ''curl -s http://%s:%s/metrics | jq -c '''' .[] | select(.attributes.namespace_name=="%s" and .type=="tablet") | {type: .type, namespace_name: .attributes.namespace_name, tablet_id: .id, table_name: .attributes.table_name, table_id: .attributes.table_id, namespace_name: .attributes.namespace_name, metrics: .metrics[] | select(.name == ("rows_inserted","rocksdb_number_db_seek","rocksdb_number_db_next","is_raft_leader") ) } '''' ''',i.host,p_tserver_webport,p_db_name); 
         insert into tbl_yb_tserver_metrics_snapshots (host, metrics) select host, metrics from tbl_temp;
-       
+        perform pg_sleep(1);
 
     end loop; 
-
+    drop table if exists tbl_temp;
     return clock_timestamp(); 
 end; 
 $DO$ language plpgsql;

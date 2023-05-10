@@ -1,4 +1,3 @@
 env_envs.env
 node_modules/
-bak/util_test_copy_from.sql
-
+bak/

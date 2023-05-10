@@ -64,6 +64,10 @@ Then, in a browser, open the Gitpod link for the GitHub repository. It's a prefi
 ---
 ### Release notes
 Notes regarding updates to this repository.
+- 2023.05.10
+  - added more index uses cases 
+  - add GIN indexes
+  - add built-in functions to geo-partitioning
 - 2023.05.07
   - Update for 2.17.3
   - Replace `curl` with `wget` for `fn_yb_tserver_metrics_snap()` in `util_ybtserver_metrics.sql`. This works in Gitpod now.
