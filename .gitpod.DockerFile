@@ -1,8 +1,9 @@
 FROM gitpod/workspace-full
 
-ARG YB_VERSION=2.17.3.0
+ARG YB_VERSION=2.19.0.0
 ARG YB_PATH=/home/gitpod/yugabyte
 ARG YB_PATH_DATA=/home/gitpod/yugabyte-data
+ARG YB_DONWLOAD=https://downloads.yugabyte.com/releases/2.19.0.0/yugabyte-2.19.0.0-b190-linux-x86_64.tar.gz
 ARG ROLE=gitpod
 
 USER root
@@ -10,7 +11,7 @@ RUN mkdir -p $YB_PATH
 RUN chown -R $ROLE:$ROLE $YB_PATH 
 
 USER $ROLE
-RUN curl -sSLo ./yugabyte.tar.gz https://downloads.yugabyte.com/releases/2.17.3.0/yugabyte-2.17.3.0-b152-linux-x86_64.tar.gz \
+RUN curl -sSLo ./yugabyte.tar.gz $YB_DONWLOAD \
   && tar -xvf yugabyte.tar.gz -C $YB_PATH --strip-components=1 \
   && chmod +x $YB_PATH/bin/* \
   && rm ./yugabyte.tar.gz
