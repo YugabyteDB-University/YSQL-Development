@@ -13,6 +13,7 @@ This repository is a lab resource in the free, **YugabyteDB YSQL Development** c
 >
 
 ---
+<div style="width:100%; background-color: #000041"><img src="assets/Gitpod_YSQL_Development.gif" /></div>
 
 To start the Gitpod environment, which is also free to use, select the link below. All you need is a Github account.
 
@@ -64,6 +65,9 @@ Then, in a browser, open the Gitpod link for the GitHub repository. It's a prefi
 ---
 ### Release notes
 Notes regarding updates to this repository.
+- 2023.09.14
+  - Move dependencies
+  - Add gif
 - 2023.06.30
   - Update for 2.19
 - 2023.05.10
