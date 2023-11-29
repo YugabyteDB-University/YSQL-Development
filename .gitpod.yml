@@ -1,46 +1,70 @@
 image:
   file: .gitpod.DockerFile
 tasks:
-  - name: run
+  - name: ybu
     init:
       pip install --upgrade pip
-      pip install ipython-sql~=0.5 --upgrade
-      pip install psycopg2-binary
-      pip install SQLAlchemy --upgrade 
-      pip install sqlparse   
       pip install html2text
       pip install jq
+      pip install ipython-sql~=0.5 --upgrade
+      pip install sqlparse
+      pip install SQLAlchemy --upgrade 
+      pip install psycopg2-binary
       pip install pgspecial
     command: |
-      yb-ctl create  \
-      --rf 3 \
-      --tserver_flags "yb_num_shards_per_tserver=1,ysql_num_shards_per_tserver=1,ysql_beta_features=true,webserver_port=8200" \
-      --master_flags "yb_num_shards_per_tserver=1,ysql_num_shards_per_tserver=1" \
-      --num_shards_per_tserver 1  \
-      --placement_info "cloud1.region1.zone1,cloud2.region2.zone2,cloud3.region3.zone3" 
-      gp ports await 5433
-      gp open 01_Lab_Setup.ipynb
-      yb-ctl status
+      yugabyted start  \
+        --advertise_address=127.0.0.1  \
+        --base_dir=/home/gitpod/var/node1  \
+        --cloud_location=cloud1.region1.zone1  \
+        --fault_tolerance=zone  \
+        --master_flags="yb_num_shards_per_tserver=1,ysql_num_shards_per_tserver=1,ysql_beta_features=true,ysql_enable_packed_row=false"  \
+        --master_webserver_port=7000  \
+        --tserver_flags="yb_num_shards_per_tserver=1,ysql_num_shards_per_tserver=1,ysql_beta_features=true,ysql_enable_packed_row=false"  \
+        --tserver_webserver_port=8200
+      yugabyted start  \
+        --advertise_address=127.0.0.2  \
+        --base_dir=/home/gitpod/var/node2  \
+        --cloud_location=cloud1.region1.zone2  \
+        --fault_tolerance=zone  \
+        --join=127.0.0.1  \
+        --master_flags="yb_num_shards_per_tserver=1,ysql_num_shards_per_tserver=1,ysql_beta_features=true,ysql_enable_packed_row=false"  \
+        --master_webserver_port=7000  \
+        --tserver_flags="yb_num_shards_per_tserver=1,ysql_num_shards_per_tserver=1,ysql_beta_features=true,ysql_enable_packed_row=false"  \
+        --tserver_webserver_port=8200
+      yugabyted start  \
+        --advertise_address=127.0.0.3  \
+        --base_dir=/home/gitpod/var/node3  \
+        --cloud_location=cloud1.region1.zone3  \
+        --fault_tolerance=zone  \
+        --join=127.0.0.1  \
+        --master_flags="yb_num_shards_per_tserver=1,ysql_num_shards_per_tserver=1,ysql_beta_features=true,ysql_enable_packed_row=false"  \
+        --master_webserver_port=7000  \
+        --tserver_flags="yb_num_shards_per_tserver=1,ysql_num_shards_per_tserver=1,ysql_beta_features=true,ysql_enable_packed_row=false"  \
+        --tserver_webserver_port=8200
+        gp open 01_Lab_Setup.ipynb
+
 ports:
-  - port: 7000
-    onOpen: notify
-  - port: 8200
-    onOpen: notify
-  - port: 37843
-    onOpen: ignore
-  - port: 7100
-    onOpen: ignore
-  - port: 9000-9040
-    onOpen: ignore
-  - port: 9100
-    onOpen: ignore
   - port: 5433
     onOpen: ignore
-  - port: 13000
+  - port: 7000
+    onOpen: notify
+  - port: 7100
+    onOpen: ignore
+  - port: 8200
+    onOpen: notify
+  - port: 9000-9040
     onOpen: ignore
   - port: 9042
     onOpen: ignore
+  - port: 9100
+    onOpen: ignore
   - port: 12000
+    onOpen: ignore
+  - port: 13000
+    onOpen: ignore
+  - port: 15433
+    onOpen: open-browser
+  - port: 37843
     onOpen: ignore
 vscode:
   extensions:
@@ -48,3 +72,5 @@ vscode:
     - ms-toolsai.jupyter
     - ms-toolsai.jupyter-keymap
     - ms-toolsai.jupyter-renderers
+    - ms-toolsai.vscode-jupyter-cell-tags
+    - ms-toolsai.vscode-jupyter-slideshow
