@@ -41,24 +41,33 @@ tasks:
         --master_webserver_port=7000  \
         --tserver_flags="yb_num_shards_per_tserver=1,ysql_num_shards_per_tserver=1,ysql_beta_features=true,ysql_enable_packed_row=false"  \
         --tserver_webserver_port=8200
-        gp open 01_Lab_Setup.ipynb
+      yugabyted configure data_placement --fault_tolerance=zone
+      gp open 01_Lab_Setup.ipynb
 
 ports:
   - port: 5433
+    description: YSQL API Port
     onOpen: ignore
   - port: 7000
+    description: YB-Master UI Port
     onOpen: notify
   - port: 7100
+    description: YB-Master API Port
     onOpen: ignore
   - port: 8200
+    description: YB-TServer UI Port
     onOpen: notify
   - port: 9000-9040
+    description: Jupyter Notebook ports
     onOpen: ignore
   - port: 9042
+    description: YCQL API Port
     onOpen: ignore
   - port: 9100
+    description:  YB-TServer API Port
     onOpen: ignore
   - port: 12000
+    description:  YB-TServer API Port
     onOpen: ignore
   - port: 13000
     onOpen: ignore
