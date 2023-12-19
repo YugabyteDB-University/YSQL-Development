@@ -29,7 +29,7 @@ tasks:
       )
     command: |
       cd ${GITPOD_REPO_ROOT}
-      ./start_all.sh
+      ./start_all.sh region
       gp open 01_Lab_Setup.ipynb
 ports:
   - port: 5433
