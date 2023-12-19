@@ -65,6 +65,9 @@ Then, in a browser, open the Gitpod link for the GitHub repository. It's a prefi
 ---
 ### Release notes
 Notes regarding updates to this repository.
+- 2023.12.19
+  - start_all.sh and stop_and_story_all.sh, scripts to help manage the yugabyted deployment
+  - added jupysql and pickelshare python packages, and removed ipython-sql
 - 2023.11.29
   - Update for 2.19.2
   - Use `yugabyted` instead of `yb-ctl`

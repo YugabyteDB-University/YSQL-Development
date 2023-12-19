@@ -1,50 +1,36 @@
 image:
   file: .gitpod.DockerFile
 tasks:
-  - name: ybu
-    init:
+  - name: htop
+    before: |
+      sdk install java < /dev/null
+    init: |
       pip install --upgrade pip
       pip install html2text
       pip install jq
-      pip install ipython-sql~=0.5 --upgrade
+      pip install --upgrade jupysql
       pip install sqlparse
       pip install SQLAlchemy --upgrade 
       pip install psycopg2-binary
+      pip install pickleshare
       pip install pgspecial
     command: |
-      yugabyted start  \
-        --advertise_address="127.0.0.1"  \
-        --base_dir=/home/gitpod/var/node1  \
-        --cloud_location=cloud1.region1.zone1  \
-        --fault_tolerance=zone  \
-        --master_flags="yb_num_shards_per_tserver=1,ysql_num_shards_per_tserver=1,ysql_beta_features=true,ysql_enable_packed_row=false"  \
-        --master_webserver_port=7000  \
-        --tserver_flags="yb_num_shards_per_tserver=1,ysql_num_shards_per_tserver=1,ysql_beta_features=true,ysql_enable_packed_row=false"  \
-        --tserver_webserver_port=8200
-      yugabyted start  \
-        --advertise_address="127.0.0.2"  \
-        --base_dir=/home/gitpod/var/node2  \
-        --cloud_location=cloud1.region1.zone2  \
-        --fault_tolerance=zone  \
-        --join="127.0.0.1"  \
-        --master_flags="yb_num_shards_per_tserver=1,ysql_num_shards_per_tserver=1,ysql_beta_features=true,ysql_enable_packed_row=false"  \
-        --master_webserver_port=7000  \
-        --tserver_flags="yb_num_shards_per_tserver=1,ysql_num_shards_per_tserver=1,ysql_beta_features=true,ysql_enable_packed_row=false"  \
-        --tserver_webserver_port=8200
-      yugabyted start  \
-        --advertise_address="127.0.0.3"  \
-        --base_dir=/home/gitpod/var/node3  \
-        --cloud_location=cloud1.region1.zone3  \
-        --fault_tolerance=zone  \
-        --join="127.0.0.1"  \
-        --master_flags="yb_num_shards_per_tserver=1,ysql_num_shards_per_tserver=1,ysql_beta_features=true,ysql_enable_packed_row=false"  \
-        --master_webserver_port=7000  \
-        --tserver_flags="yb_num_shards_per_tserver=1,ysql_num_shards_per_tserver=1,ysql_beta_features=true,ysql_enable_packed_row=false"  \
-        --tserver_webserver_port=8200
-      yugabyted configure data_placement --fault_tolerance=zone
-      yugabyted status
+      htop
+  - name: ybu-lab
+    init: |
+      (
+        set -e
+        cp -r ${GITPOD_REPO_ROOT}/gitpod_conf/yugabyted.conf ${YB_PATH_BASE}/node1/yugabyted.conf
+        cp -r ${GITPOD_REPO_ROOT}/gitpod_conf/yugabyted.conf ${YB_PATH_BASE}/node2/yugabyted.conf
+        cp -r ${GITPOD_REPO_ROOT}/gitpod_conf/yugabyted.conf ${YB_PATH_BASE}/node3/yugabyted.conf
+        echo "$(date) –  copied yugabyted.conf"
+        chmod 777 ${GITPOD_REPO_ROOT}/start_all.sh
+        chmod 777 ${GITPOD_REPO_ROOT}/stop_and_destroy_all.sh
+      )
+    command: |
+      cd ${GITPOD_REPO_ROOT}
+      ./start_all.sh
       gp open 01_Lab_Setup.ipynb
-
 ports:
   - port: 5433
     description: YSQL API Port
