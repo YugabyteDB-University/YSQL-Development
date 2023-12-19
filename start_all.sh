@@ -1,5 +1,5 @@
 #! /bin//bash
-MODE="zone"
+MODE="region"
 
 # Check if an argument is provided
 # 2.19.2 for yugabyted does not support cloud tolerance
@@ -93,6 +93,22 @@ start_node() {
     fi
 }
 
+error_fix_bad_node_start() {
+  echo "What to do with this error???"
+  echo "(1) Ctrl + C to stop this script in the terminal."
+  echo "(2) In the terminal, run:"
+  echo "./stop_and_detroy_all.sh "
+  echo "(3) After the script completes, in the terminal, run: "
+  echo "./start_all.sh $MODE"
+}
+
+error_fix_bad_node_count() {
+  echo "What to do with this error???"
+  echo "(1) Ctrl + C to stop this script in the terminal."
+  echo "(2) After the script completes, in the terminal, run: "
+  echo "./start_all.sh $MODE"
+}
+
 MIN_NODE_NUM=1
 MAX_NODE_NUM=3
 # Loop to start nodes, up to 3 MAX_NODE_NUM nodes
@@ -103,8 +119,9 @@ while (( $MIN_NODE_NUM <= $MAX_NODE_NUM )); do
 
     # Check if start_node was successful
     if [ $? -ne 0 ]; then
-        echo "Failed to start node ${MIN_NODE_NUM}, going to rm -rf base_dir and exit"
-       # rm -rf ${YB_PATH_BASE}/node${MIN_NODE_NUM}
+        echo "Failed to start node ${MIN_NODE_NUM}, going to rm -rf base_dir, show how to fix, and exit"
+        rm -rf ${YB_PATH_BASE}/node${MIN_NODE_NUM}
+        error_fix_bad_node_start
         exit 1
     fi
 
@@ -120,15 +137,17 @@ NODE_COUNT=$(ysqlsh -U yugabyte -h 127.0.0.1 -Atc "select count(*) from yb_serve
 
 # Check if NODE_COUNT is not set or not a number
 if [[ -z "$NODE_COUNT" ]] || ! [[ "$NODE_COUNT" =~ ^[0-9]+$ ]]; then
-    echo "Yikes! Using ysqlsh, unable to retrieve the node count or the node count is not a valid number, so will stop and destroy"
+    echo "Yikes! Using ysqlsh, unable to retrieve the node count or the node count is not a valid number, so will stop and destroy and show how to fix"
     ./stop_and_destroy_all.sh
+    error_fix_bad_node_count
     exit 1
 fi
 
 # Check if NODE_COUNT is not equal to 3
 if [[ $NODE_COUNT -ne $MAX_NODE_NUM ]]; then
-  echo "Yikes! TUsing ysqlsh, retrieved node count as $$NODE_COUNT, but it is not equal to $MAX_NODE_NUM, so will stop and destroy"
+  echo "Yikes! Using ysqlsh, retrieved node count as $$NODE_COUNT, but it is not equal to $MAX_NODE_NUM, so will stop and destroy"
   ./stop_and_destroy_all.sh
+  error_fix_bad_node_count
   exit 1
 else
   echo "Looks good in terms of running nodes and node count. Time to configure the data placement..."

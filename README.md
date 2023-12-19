@@ -56,11 +56,20 @@ Then, in a browser, open the Gitpod link for the GitHub repository. It's a prefi
 **How do I start?**
 - Simply select this link: [https://gitpod.io/#https://github.com/YugabyteDB-University/YSQL-Development](https://gitpod.io/#https://github.com/YugabyteDB-University/YSQL-Development)
 
-**Why does it take 5 minutes to start up?**
-- Gitpod builds a docker image for VS Code, related extensions, and YugabyteDB. This takes a few minutes. However, after your image is created, subsequent launches will be much faster.
 
-**Where can I find help and support?**
-- You can ask questions in the discussion forum for this lab in the course player at Yugabyte University. Enroll for **FREE** at [Yugabyte University](https://university.yugabyte.com/).
+**OK, it started, BUT the ybu-lab terminal shows errors. What can I do???**
+- There should be some helpful error messages, but in spite of that, you can run two scripts:
+  - `start_all.sh` starts yugabyted and accepts 1 argument with zero or 1 value: `zone`, `region`, or `cloud`
+  - `stop_and_destroy_all.sh` kills all the nodes.
+- Here's how to force the fix and get things back on track in the `ybu-lab` terminal:
+  - 1) `cd $GITPOD_REPO_ROOT`
+  - 2) `.\stop_and_destroy_all.sh`
+  - 3) `.\start_all.sh region`
+
+**I'm still running into issues. Where can I find help and support?**
+- You can ask questions our community Slack in the #training channel at [YugabyteDB Community Slack](https://join.slack.com/t/yugabyte-db/shared_invite/zt-xbd652e9-3tN0N7UG0eLpsace4t1d2A/).
+
+
 
 ---
 ### Release notes
