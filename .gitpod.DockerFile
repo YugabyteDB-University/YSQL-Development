@@ -40,6 +40,7 @@ RUN echo "export PATH=\$PATH:$YB_PATH_BIN/bin/" >> ~/.bashrc
 
 # change this per repo
 ENV MY_GITPOD_REPO=YSQL-Development
+ENV PATH="$YB_BIN_PATH/bin/:$PATH"
 ENV N1=1
 ENV N2=2
 ENV N3=3
