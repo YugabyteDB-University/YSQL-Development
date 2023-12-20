@@ -77,6 +77,7 @@ Notes regarding updates to this repository.
 - 2023.12.19
   - start_all.sh and stop_and_story_all.sh, scripts to help manage the yugabyted deployment
   - added jupysql and pickelshare python packages, and removed ipython-sql
+  - added css styling for HTML output to align left for query plans
 - 2023.11.29
   - Update for 2.19.2
   - Use `yugabyted` instead of `yb-ctl`
