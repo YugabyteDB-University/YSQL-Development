@@ -96,10 +96,11 @@ start_node() {
 error_fix_bad_node_start() {
   echo "What to do with this error???"
   echo "(1) Ctrl + C to stop this script in the terminal."
-  echo "(2) In the terminal, run:"
-  echo "./stop_and_detroy_all.sh "
+  echo "(2) In this terminal, run:"
+  echo "./stop_and_destroy_all.sh "
   echo "(3) After the script completes, in the terminal, run: "
   echo "./start_all.sh $MODE"
+  echo "(4) Manually open from the Explorer, 01_Lab_Setup.ipynb"
 }
 
 error_fix_bad_node_count() {
@@ -107,6 +108,7 @@ error_fix_bad_node_count() {
   echo "(1) Ctrl + C to stop this script in the terminal."
   echo "(2) After the script completes, in the terminal, run: "
   echo "./start_all.sh $MODE"
+  echo "(3) Manually open from the Explorer, 01_Lab_Setup.ipynb"
 }
 
 MIN_NODE_NUM=1
