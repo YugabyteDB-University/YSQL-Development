@@ -8,7 +8,7 @@ tasks:
       pip install --upgrade pip
       pip install html2text
       pip install jq
-      pip install --upgrade jupysql
+      pip install ipython-sql~=0.5 --upgrade
       pip install sqlparse
       pip install SQLAlchemy --upgrade 
       pip install psycopg2-binary
