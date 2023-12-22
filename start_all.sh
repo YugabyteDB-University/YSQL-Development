@@ -166,5 +166,9 @@ else
   echo "All nodes should be up. Let's take a look using yb_servers()"
 
   ysqlsh -U yugabyte -h 127.0.0.1 -c "select * from yb_servers();"
+
+  echo "If you don't see a notebook tab, try one or both of the following..."
+  echo " disable popup blocker for this site"
+  echo " from Explorer, open '01_Lab_Setup.ipynb"
 fi
 
