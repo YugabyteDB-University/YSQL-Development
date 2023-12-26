@@ -170,5 +170,6 @@ else
   echo "If you don't see a notebook tab, try one or both of the following..."
   echo " disable popup blocker for this site"
   echo " from Explorer, open '01_Lab_Setup.ipynb"
+  exit 0
 fi
 

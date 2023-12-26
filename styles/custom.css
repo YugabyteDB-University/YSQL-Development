@@ -27,6 +27,8 @@
     padding-left: var(--notebook-output-node-left-padding);
     box-sizing: border-box;
     border-top: none;
+    border-style: dashed;
+    border-color: gainsboro;
 }
 
 /* markdown */
@@ -44,6 +46,9 @@
 
     font-size: var(--notebook-markup-font-size);
     color: var(--theme-ui-foreground);
+    border-style: dotted;
+    border-color: darkorange;
+    background-color: white;
 }
 
 #container div.preview.draggable {
@@ -91,6 +96,7 @@ body {
     padding: 0px;
     height: 100%;
     width: 100%;
+    background-color: #fdfdfd ;
 }
 
 table, thead, tr, th, td, tbody {

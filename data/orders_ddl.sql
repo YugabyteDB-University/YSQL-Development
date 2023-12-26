@@ -53,4 +53,4 @@ create table  if not exists  tbl_order_changes_prtn_2023_04 partition of tbl_ord
 values
 from ('2023-04-01') to ('2023-05-01');
 
---create table tbl_order_changes_prtn_default partition of tbl_order_changes default ;
+create table tbl_order_changes_prtn_default partition of tbl_order_changes default ;
