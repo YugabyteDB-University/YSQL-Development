@@ -46,8 +46,8 @@
 
     font-size: var(--notebook-markup-font-size);
     color: var(--theme-ui-foreground);
-    border-style: dotted;
-    border-color: darkorange;
+    
+    border-left: dotted darkorange;
     background-color: white;
 }
 
