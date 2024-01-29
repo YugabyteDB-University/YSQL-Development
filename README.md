@@ -74,6 +74,8 @@ Then, in a browser, open the Gitpod link for the GitHub repository. It's a prefi
 ---
 ### Release notes
 Notes regarding updates to this repository.
+- 2024.01.29
+  - update to YugabyteDB 2.20.1
 - 2023.12.21
   - start_all.sh and stop_and_story_all.sh, scripts to help manage the yugabyted deployment
   - added css styling for HTML output to align left for query plans

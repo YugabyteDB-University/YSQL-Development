@@ -1,8 +1,10 @@
 #! /bin//bash
 MODE="region"
+START_SCRIPT="start_all.sh"
+STOP_SCRIPT="stop_and_destroy_all.sh"
 
 # Check if an argument is provided
-# 2.19.2 for yugabyted does not support cloud tolerance
+# Does 2.20.1 for yugabyted does support cloud tolerance???
 if [[ $# -eq 1 ]]; then
     case $1 in
         zone)
@@ -12,8 +14,8 @@ if [[ $# -eq 1 ]]; then
             MODE="region"
             ;;
         cloud)
-            #MODE="cloud"
-            MODE="region"
+            MODE="cloud"
+            #MODE="region"
             ;;
         *)
             echo "Invalid argument: $1"
@@ -29,6 +31,7 @@ start_node() {
     local node_number=$1
     local advertise_address="127.0.0.${node_number}"
     local base_dir="${YB_PATH_BASE}/node${node_number}"
+    local conf_path="${base_dir}/yugabyted.conf"
     local cloud_location=""
     local master_webserver_port=7000
     local tserver_webserver_port=8200
@@ -56,18 +59,22 @@ start_node() {
       # Directory does not exist, so create it
       mkdir -p $base_dir
       echo "Directory created: $base_dir"
+      # cp -r ${GITPOD_REPO_ROOT}/gitpod_conf/yugabyted.conf ${conf_path}
+      # echo "Copy yugabyted.conf"
     fi
 
-    echo "Starting node ${node_number} with the following: \
+    # echo "Using a yugabyted.conf configuration file that reads as..."
+    # cat $conf_path
+
+    echo "Starting node ${node_number} using yugabyted.conf with the following: \
     advertise_address=$advertise_address \
     base_dir=$base_dir \
     cloud_location=$cloud_location \
-    master_webserver_port=$master_webserver_port \
-    tserver_webserver_port=$tserver_webserver_port \
     fault_tolerance=$MODE \
     join_arg=$join_arg"
-
-    yugabyted start \
+  
+  # there is still an issue with config, need to fix, but will leave in code for now.
+  yugabyted start \
       --advertise_address=${advertise_address} \
       --base_dir=${base_dir} \
       --cloud_location=${cloud_location} \
@@ -96,19 +103,17 @@ start_node() {
 error_fix_bad_node_start() {
   echo "What to do with this error???"
   echo "(1) Ctrl + C to stop this script in the terminal."
-  echo "(2) In this terminal, run:"
-  echo "./stop_and_destroy_all.sh "
+  echo "(2) In the terminal, run:"
+  echo "./$STOP_SCRIPT"
   echo "(3) After the script completes, in the terminal, run: "
-  echo "./start_all.sh $MODE"
-  echo "(4) Manually open from the Explorer, 01_Lab_Setup.ipynb"
+  echo "./$START_SCRIPT $MODE"
 }
 
 error_fix_bad_node_count() {
   echo "What to do with this error???"
   echo "(1) Ctrl + C to stop this script in the terminal."
   echo "(2) After the script completes, in the terminal, run: "
-  echo "./start_all.sh $MODE"
-  echo "(3) Manually open from the Explorer, 01_Lab_Setup.ipynb"
+  echo "./$START_SCRIPT $MODE"
 }
 
 MIN_NODE_NUM=1
@@ -121,7 +126,9 @@ while (( $MIN_NODE_NUM <= $MAX_NODE_NUM )); do
 
     # Check if start_node was successful
     if [ $? -ne 0 ]; then
-        echo "Failed to start node ${MIN_NODE_NUM}, going to rm -rf base_dir, show how to fix, and exit"
+        echo "Failed to start node ${MIN_NODE_NUM}!"
+        echo "... going to cat the log, then rm -rf base_dir, show how to fix, and exit"
+        cat ${YB_PATH_BASE}/node${MIN_NODE_NUM}/logs/yugabyted.log
         rm -rf ${YB_PATH_BASE}/node${MIN_NODE_NUM}
         error_fix_bad_node_start
         exit 1
@@ -139,16 +146,14 @@ NODE_COUNT=$(ysqlsh -U yugabyte -h 127.0.0.1 -Atc "select count(*) from yb_serve
 
 # Check if NODE_COUNT is not set or not a number
 if [[ -z "$NODE_COUNT" ]] || ! [[ "$NODE_COUNT" =~ ^[0-9]+$ ]]; then
-    echo "Yikes! Using ysqlsh, unable to retrieve the node count or the node count is not a valid number, so will stop and destroy and show how to fix"
-    ./stop_and_destroy_all.sh
+    echo "Yikes! Using ysqlsh, unable to retrieve the node count or the node count is not a valid number, see resolution"
     error_fix_bad_node_count
     exit 1
 fi
 
 # Check if NODE_COUNT is not equal to 3
 if [[ $NODE_COUNT -ne $MAX_NODE_NUM ]]; then
-  echo "Yikes! Using ysqlsh, retrieved node count as $$NODE_COUNT, but it is not equal to $MAX_NODE_NUM, so will stop and destroy"
-  ./stop_and_destroy_all.sh
+  echo "Yikes! Using ysqlsh, retrieved node count as $$NODE_COUNT, but it is not equal to $MAX_NODE_NUM, see resolution"
   error_fix_bad_node_count
   exit 1
 else
@@ -167,9 +172,6 @@ else
 
   ysqlsh -U yugabyte -h 127.0.0.1 -c "select * from yb_servers();"
 
-  echo "If you don't see a notebook tab, try one or both of the following..."
-  echo " disable popup blocker for this site"
-  echo " from Explorer, open '01_Lab_Setup.ipynb"
   exit 0
 fi
 

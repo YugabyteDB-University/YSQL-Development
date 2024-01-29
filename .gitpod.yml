@@ -21,10 +21,6 @@ tasks:
     init: |
       (
         set -e
-        cp -r ${GITPOD_REPO_ROOT}/gitpod_conf/yugabyted.conf ${YB_PATH_BASE}/node1/yugabyted.conf
-        cp -r ${GITPOD_REPO_ROOT}/gitpod_conf/yugabyted.conf ${YB_PATH_BASE}/node2/yugabyted.conf
-        cp -r ${GITPOD_REPO_ROOT}/gitpod_conf/yugabyted.conf ${YB_PATH_BASE}/node3/yugabyted.conf
-        echo "$(date) –  copied yugabyted.conf"
         chmod 777 ${GITPOD_REPO_ROOT}/start_all.sh
         chmod 777 ${GITPOD_REPO_ROOT}/stop_and_destroy_all.sh
       )

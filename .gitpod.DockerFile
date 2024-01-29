@@ -1,13 +1,12 @@
 FROM gitpod/workspace-full
 
-ARG YB_VERSION=2.19.2.0
-ARG YB_DOWNLOAD_URL=https://downloads.yugabyte.com/releases/2.19.2.0/yugabyte-2.19.2.0-b121-linux-x86_64.tar.gz
-# ARG YB_VERSION=2.20.0.1
-# ARG YB_DOWNLOAD_URL=https://downloads.yugabyte.com/releases/2.20.0.1/yugabyte-2.20.0.1-b1-linux-x86_64.tar.gz
-# ARG YB_VERSION=2.20.0.2
-# ARG YB_DOWNLOAD_URL=https://downloads.yugabyte.com/releases/2.20.0.2/yugabyte-2.20.0.2-b1-linux-x86_64.tar.gz
+#ARG YB_VERSION=2.19.2.0
+#ARG YB_DOWNLOAD_URL=https://downloads.yugabyte.com/releases/2.19.2.0/yugabyte-2.19.2.0-b121-linux-x86_64.tar.gz
+ARG YB_VERSION=2.20.1.3
+ARG YB_DOWNLOAD_URL=https://downloads.yugabyte.com/releases/2.20.1.3/yugabyte-2.20.1.3-b3-linux-x86_64.tar.gz
 ARG YB_PATH_BIN=/home/gitpod/yugabyte
 ARG YB_PATH_BASE=/home/gitpod/yugabyte/var
+
 
 ARG ROLE=gitpod
 
@@ -32,6 +31,8 @@ RUN curl -sSLo ./yugabyte.tar.gz $YB_DOWNLOAD_URL  \
   && chmod +x $YB_PATH_BIN/bin/* \
   && rm ./yugabyte.tar.gz
 
+# this is a hard fix for unresolved issue
+RUN sed -i 's/9000/8200/g'  $YB_PATH_BIN/bin/yugabyted
 RUN $YB_PATH_BIN/bin/post_install.sh
 
 RUN echo "\n# yugabytedb executable path" >> ~/.bashrc
