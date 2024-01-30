@@ -172,6 +172,10 @@ else
 
   ysqlsh -U yugabyte -h 127.0.0.1 -c "select * from yb_servers();"
 
+  echo "Looks good!"
+
+  echo "If it is not yet open, start by opening --> 01_Lab_Setup.ipynb"
+
   exit 0
 fi
 
