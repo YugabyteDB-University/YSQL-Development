@@ -1,4 +1,4 @@
-<div style="width:100%; background-color: #000041"><a target="_blank" href="http://university.yugabyte.com"><img src="assets/YBU_Logo.png" /></a></div>
+<div style="width:100%; background-color: #000041"><a target="_blank" href="http://university.yugabyte.com?utm_source=gitpod&utm_medium=notebook"><img src="assets/YBU_Logo.png" /></a></div>
 
 # YSQL Development
 
@@ -23,7 +23,7 @@ Gitpod is an on-demand developer environment for a GitHub, Git, or BitBucket wor
 
 Using Gitpod, you can run the notebook files in an on-demand VS Code, browser based environment. 😎
 
-This repository contains the notebook files for YSQL Development, a free course that is soon-to-be available at [university.yugabyte.com](https://university.yugabyte.com).
+This repository contains the notebook files for YSQL Development, a free course that is available at [university.yugabyte.com](https://university.yugabyte.com?utm_source=gitpod&utm_medium=notebook).
 
 Using Gitpod, you can run the notebook files in an on-demand VS Code, browser based environment.
 
@@ -67,7 +67,7 @@ Then, in a browser, open the Gitpod link for the GitHub repository. It's a prefi
   - 3) `.\start_all.sh region`
 
 **I'm still running into issues. Where can I find help and support?**
-- You can ask questions our community Slack in the #training channel at [YugabyteDB Community Slack](https://join.slack.com/t/yugabyte-db/shared_invite/zt-xbd652e9-3tN0N7UG0eLpsace4t1d2A/).
+- You can ask questions our community Slack in the #training channel at [YugabyteDB Community Slack](https://join.slack.com/t/yugabyte-db/shared_invite/zt-xbd652e9-3tN0N7UG0eLpsace4t1d2A/?utm_source=gitpod&utm_medium=notebook).
 
 
 
